@@ -15,9 +15,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_USERNAME = "username";
     public static final String COLUMN_PASSWORD = "password";
 
-
-
-
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -36,37 +33,31 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public boolean addUser(String username, String password) {
+    public boolean addUser(String username, String hashedPassword) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COLUMN_USERNAME, username);
-        values.put(COLUMN_PASSWORD, password);
+        values.put(COLUMN_PASSWORD, hashedPassword);  // Сохраняем уже хэшированный пароль
 
         long result = db.insert(TABLE_USERS, null, values);
         return result != -1;
     }
 
-    public boolean checkUser(String username, String password) {
+
+    public boolean checkUser(String username, String hashedPassword) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = null;
         try {
-            // Запрос к базе данных для проверки пользователя
             String query = "SELECT * FROM " + TABLE_USERS + " WHERE " +
                     COLUMN_USERNAME + "=? AND " + COLUMN_PASSWORD + "=?";
-            cursor = db.rawQuery(query, new String[]{username, password});
+            cursor = db.rawQuery(query, new String[]{username, hashedPassword});
 
-            // Проверка, найден ли пользователь
-            return cursor.moveToFirst(); // Если пользователь найден, вернется true, иначе false
-        } catch (Exception e) {
-            e.printStackTrace(); // Логируем ошибку в случае исключения
-            return false;
+            return cursor.moveToFirst();
         } finally {
-            // Закрываем курсор, чтобы избежать утечек памяти
             if (cursor != null) {
                 cursor.close();
             }
         }
     }
-
 }
 

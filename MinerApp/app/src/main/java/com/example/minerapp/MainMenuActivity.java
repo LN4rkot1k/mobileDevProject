@@ -49,6 +49,7 @@ public class MainMenuActivity extends AppCompatActivity {
         // Кнопка "Сменить профиль"
         Button changeProfileButton = findViewById(R.id.changeProfileButton);
         changeProfileButton.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View v) {
                 // Переход на экран регистрации

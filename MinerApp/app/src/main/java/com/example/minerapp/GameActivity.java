@@ -49,23 +49,27 @@ public class GameActivity extends AppCompatActivity {
         scoreTextView = findViewById(R.id.scoreTextView); // Связываем с элементом XML
         backButton = findViewById(R.id.returnButton);
 
+        String username = GameSession.getInstance().getUsername();
+        String level = GameSession.getInstance().getLevel();
+
+
         // Получаем параметры из Intent
-        Intent intent = getIntent();
-        String level = intent.getStringExtra("level"); // Уровень сложности
+        //Intent intent = getIntent();
+        //String level = intent.getStringExtra("level"); // Уровень сложности
 
         // Устанавливаем параметры в зависимости от уровня сложности
         if ("easy".equals(level)) {
             rowsSize = 9;
             columnSize = 8;
-            mineCount = 2; // Легкий уровень
+            mineCount = 2; // Легкий уровень 10
         } else if ("medium".equals(level)) {
             rowsSize = 11;
             columnSize = 8;
-            mineCount = 30; // Средний уровень
+            mineCount = 30; // Средний уровень 30
         } else if ("hard".equals(level)) {
             rowsSize = 13;
             columnSize = 8;
-            mineCount = 50; // Сложный уровень
+            mineCount = 50; // Сложный уровень 50
         } else {
             rowsSize = 9; // Значения по умолчанию
             columnSize = 8;
@@ -191,7 +195,8 @@ public class GameActivity extends AppCompatActivity {
 
 
     private void revealCell(int row, int col) {
-        if (isRevealed[row][col] || isFlagged[row][col]) return; // Если клетка уже открыта или на ней флажок, не открываем
+        if (gameOver || isRevealed[row][col] || isFlagged[row][col]) return; // Проверка на завершение игры
+
         isRevealed[row][col] = true; // Отметим клетку как открытую
 
         Button cellButton = buttons[row][col];
@@ -201,38 +206,40 @@ public class GameActivity extends AppCompatActivity {
 
         if (isMine[row][col]) {
             cellButton.setText("💣");
-            cellButton.setBackgroundColor(getResources().getColor(android.R.color.holo_red_light)); // Красный для бомбы
-            gameOver(); // Игра окончена
-        } else {
-            int mines = neighborMineCount[row][col];
-            if (mines > 0) {
-                cellButton.setText(String.valueOf(mines)); // Показываем количество мин вокруг
-            } else {
-                cellButton.setText(""); // Если мин нет, оставляем пустую клетку
-                // Открытие соседних клеток
-                for (int i = -1; i <= 1; i++) {
-                    for (int j = -1; j <= 1; j++) {
-                        int newRow = row + i;
-                        int newCol = col + j;
+            cellButton.setBackgroundColor(getResources().getColor(android.R.color.holo_red_light)); // Красный для мины
+            gameOver(); // Завершаем игру (вызываем только один метод завершения)
+            return; // Прерываем выполнение, чтобы не вызвать gameWon()
+        }
 
-                        if (newRow >= 0 && newRow < rowsSize && newCol >= 0 && newCol < columnSize) {
-                            revealCell(newRow, newCol); // Рекурсивное открытие соседних клеток
-                        }
+        int mines = neighborMineCount[row][col];
+        if (mines > 0) {
+            cellButton.setText(String.valueOf(mines)); // Показываем количество мин вокруг
+        } else {
+            cellButton.setText(""); // Если мин нет, оставляем пустую клетку
+            // Открытие соседних клеток
+            for (int i = -1; i <= 1; i++) {
+                for (int j = -1; j <= 1; j++) {
+                    int newRow = row + i;
+                    int newCol = col + j;
+
+                    if (newRow >= 0 && newRow < rowsSize && newCol >= 0 && newCol < columnSize) {
+                        revealCell(newRow, newCol); // Рекурсивное открытие соседних клеток
                     }
                 }
             }
-
-            // Увеличиваем очки за каждую открытую клетку
-            score += 3;
-            updateScoreDisplay(); // Обновляем отображение очков
         }
+
+        // Увеличиваем очки за каждую открытую клетку
+        score += 3;
+        updateScoreDisplay(); // Обновляем отображение очков
         revealedCount++;
 
-        // Проверка на выигрыш
-        if (revealedCount == (rowsSize * columnSize - mineCount)) {
+        // Проверка на выигрыш (только если игра еще не закончена)
+        if (!gameOver && revealedCount == (rowsSize * columnSize - mineCount)) {
             gameWon(); // Игра выиграна
         }
     }
+
 
 
 
@@ -255,14 +262,38 @@ public class GameActivity extends AppCompatActivity {
         gameOver = true;
 
         // Получаем данные о пользователе и уровне
-        Intent intent = getIntent();
-        String username = intent.getStringExtra("username"); // Получаем имя пользователя из Intent
-        String level = intent.getStringExtra("level");       // Получаем уровень сложности из Intent
-        int time = secondsElapsed;                           // Время, затраченное на игру
+        String username = GameSession.getInstance().getUsername();
+        String level = GameSession.getInstance().getLevel();
+        int timeInSeconds = secondsElapsed;                  // Время, затраченное на игру (в секундах)
 
-        // Добавляем рекорд в базу данных
-        //DatabaseRecordsHelper recordsDatabaseHelper = new DatabaseRecordsHelper(this);
-        //recordsDatabaseHelper.addRecord(username, level, time); // Записываем рекорд в базу
+        // Преобразуем время в формат минуты:секунды
+        int minutes = timeInSeconds / 60;
+        int seconds = timeInSeconds % 60;
+
+        // Преобразуем в строковый формат времени
+        String timeFormatted = String.format("%02d:%02d", minutes, seconds);
+
+        // Сохраняем время в GameSession
+        GameSession.getInstance().setTime(timeFormatted);  // Сохраняем отформатированное время (минуты:секунды)
+        GameSession.getInstance().logCurrentState();        // Логируем текущее состояние GameSession
+
+
+        Log.d("GameActivity", "Saving record");
+        Log.d("GameActivity", "Username: " + username);
+        Log.d("GameActivity", "Level: " + level);
+        Log.d("GameActivity", "Time: " + timeFormatted);
+
+
+        // Сохраняем рекорд в базу данных
+        DatabaseRecordsHelper dbHelper = new DatabaseRecordsHelper(this);
+        boolean isRecordSaved = dbHelper.addRecord(username, level, timeFormatted);  // Добавляем запись в базу данных
+
+        // Проверка, был ли успешно сохранен рекорд
+        if (isRecordSaved) {
+            Toast.makeText(this, "Рекорд сохранен!", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Ошибка при сохранении рекорда", Toast.LENGTH_SHORT).show();
+        }
 
         // Показываем сообщение об окончании игры и победе
         new AlertDialog.Builder(this)
@@ -271,6 +302,8 @@ public class GameActivity extends AppCompatActivity {
                 .setPositiveButton("OK", (dialog, which) -> finish())  // Закрываем игру
                 .show();
     }
+
+
 
 
 

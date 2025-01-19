@@ -3,29 +3,32 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="16dp"
-    android:background="?android:attr/selectableItemBackground">
+    android:padding="8dp">
 
     <TextView
-        android:id="@+id/username"
+        android:id="@+id/usernameTextView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:text="Username"
-        android:textSize="16sp" />
+        android:textStyle="bold"
+        android:gravity="center"/>
 
     <TextView
-        android:id="@+id/level"
+        android:id="@+id/levelTextView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:text="Level"
-        android:textSize="16sp" />
+        android:textStyle="bold"
+        android:gravity="center"/>
 
     <TextView
-        android:id="@+id/time"
-        android:layout_width="wrap_content"
+        android:id="@+id/timeTextView"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:text="Time"
-        android:textSize="16sp" />
+        android:textStyle="bold"
+        android:gravity="center"/>
 </LinearLayout>

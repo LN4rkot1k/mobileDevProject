@@ -1,128 +1,77 @@
 package com.example.minerapp;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.SimpleCursorAdapter;
-
-
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
-
-import java.util.ArrayList;
 
 public class RecordsActivity extends AppCompatActivity {
 
-    //private ListView recordsListView;
-    private Button backButton;
-    //private Button deleteButton;
-    //private DatabaseRecordsHelper databaseHelper;
+    private DatabaseRecordsHelper dbHelper;
+    private ListView recordsListView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_records);
 
-        // Инициализируем элементы интерфейса
-        //recordsListView = findViewById(R.id.recordsListView);
-        backButton = findViewById(R.id.backButton);
-        //deleteButton = findViewById(R.id.deleteButton);
+        recordsListView = findViewById(R.id.records_list);
+        dbHelper = new DatabaseRecordsHelper(this);
 
-        // Инициализируем объект DatabaseHelper
-        //databaseHelper = new DatabaseRecordsHelper(this);
+        // Добавляем заголовок
+        addListHeader();
 
-        // Устанавливаем адаптер для ListView
-        //loadRecords();
 
-        // Обработчик кнопки "Назад"
+        Button backButton = findViewById(R.id.backButton);
         backButton.setOnClickListener(v -> {
-            finish();  // Завершаем активность и возвращаемся на предыдущий экран
+            Intent intent = new Intent(RecordsActivity.this, MainMenuActivity.class);
+            startActivity(intent);  // Переход в MainMenuActivity
+            finish();  // Закрытие текущего activity
         });
 
-        // Обработчик кнопки "Удалить все записи"
-        /*deleteButton.setOnClickListener(v -> {
-            databaseHelper.deleteAllRecords();  // Удаляем все записи из базы данных
-            loadRecords();  // Перезагружаем данные в ListView
-            Toast.makeText(RecordsActivity.this, "Все записи удалены", Toast.LENGTH_SHORT).show();
-        });*/
+        // Отображаем рекорды
+        displayRecords();
     }
 
-    // Метод для загрузки всех записей и отображения их в ListView
-    /*private void loadRecords() {
-        // Получаем все записи из базы данных
-        Cursor cursor = databaseHelper.getAllRecords();
+    private void addListHeader() {
+        LayoutInflater inflater = getLayoutInflater();
+        View headerView = inflater.inflate(R.layout.record_item, recordsListView, false);
 
-        // Определяем колонки, которые нам нужны для отображения
-        String[] from = {
-                DatabaseRecordsHelper.COLUMN_USERNAME,
-                DatabaseRecordsHelper.COLUMN_LEVEL,
-                DatabaseRecordsHelper.COLUMN_TIME
-        };
+        // Находим элементы заголовка
+        TextView usernameHeader = headerView.findViewById(R.id.usernameTextView);
+        TextView levelHeader = headerView.findViewById(R.id.levelTextView);
+        TextView timeHeader = headerView.findViewById(R.id.timeTextView);
 
-        // Определяем соответствие между колонками и TextView
-        int[] to = {R.id.username, R.id.level, R.id.time};
+        // Устанавливаем текст заголовка
+        usernameHeader.setText("Логин");
+        levelHeader.setText("Уровень сложности");
+        timeHeader.setText("Время");
 
-        // Создаем адаптер
+        // Делаем заголовок жирным
+        usernameHeader.setTextAppearance(android.R.style.TextAppearance_Medium);
+        levelHeader.setTextAppearance(android.R.style.TextAppearance_Medium);
+        timeHeader.setTextAppearance(android.R.style.TextAppearance_Medium);
+
+        // Добавляем заголовок перед списком
+        recordsListView.addHeaderView(headerView);
+    }
+
+    private void displayRecords() {
+        Cursor cursor = dbHelper.getTopRecords();
+
+        String[] fromColumns = {"username", "level", "time"};
+        int[] toViews = {R.id.usernameTextView, R.id.levelTextView, R.id.timeTextView};
+
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(
-                this,
-                R.layout.record_item, // Используем вашу разметку
-                cursor,
-                from,
-                to,
-                0
+                this, R.layout.record_item, cursor, fromColumns, toViews, 0
         );
 
-        // Устанавливаем адаптер для ListView
         recordsListView.setAdapter(adapter);
-    }*/
-
-
-    // Адаптер для отображения данных в ListView
-    /*private class RecordsAdapter extends android.widget.BaseAdapter {
-
-        private final ArrayList<String> records;
-
-        public RecordsAdapter(RecordsActivity context, ArrayList<String> records) {
-            this.records = records;
-        }
-
-        @Override
-        public int getCount() {
-            return records.size();
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return records.get(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, android.view.ViewGroup parent) {
-            // Используем TextView для отображения записи
-            TextView recordTextView;
-
-            if (convertView == null) {
-                // Если view еще не существует, создаем новый TextView
-                recordTextView = new TextView(RecordsActivity.this);
-                recordTextView.setPadding(20, 20, 20, 20);
-                recordTextView.setTextSize(16);
-            } else {
-                // Если view существует, используем его
-                recordTextView = (TextView) convertView;
-            }
-
-            // Устанавливаем текст для каждой записи
-            recordTextView.setText(records.get(position));
-
-            return recordTextView;
-        }
-    }*/
+    }
 }

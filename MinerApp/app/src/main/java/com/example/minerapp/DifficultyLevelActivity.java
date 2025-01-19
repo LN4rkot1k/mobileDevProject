@@ -23,6 +23,10 @@ public class DifficultyLevelActivity extends AppCompatActivity {
 
         // Легкий уровень
         easyButton.setOnClickListener(v -> {
+
+            GameSession.getInstance().setLevel("easy");
+            GameSession.getInstance().logCurrentState();
+
             Intent intent = new Intent(DifficultyLevelActivity.this, GameActivity.class);
             intent.putExtra("level", "easy");
             intent.putExtra("rowsSize", 8); // размер поля для легкого уровня
@@ -33,6 +37,10 @@ public class DifficultyLevelActivity extends AppCompatActivity {
 
         // Средний уровень
         mediumButton.setOnClickListener(v -> {
+
+            GameSession.getInstance().setLevel("medium");
+            GameSession.getInstance().logCurrentState();
+
             Intent intent = new Intent(DifficultyLevelActivity.this, GameActivity.class);
             intent.putExtra("level", "medium");
             intent.putExtra("rowsSize", 8); // размер поля для легкого уровня
@@ -43,6 +51,10 @@ public class DifficultyLevelActivity extends AppCompatActivity {
 
         // Сложный уровень
         hardButton.setOnClickListener(v -> {
+
+            GameSession.getInstance().setLevel("hard");
+            GameSession.getInstance().logCurrentState();
+
             Intent intent = new Intent(DifficultyLevelActivity.this, GameActivity.class);
             intent.putExtra("level", "hard");
             intent.putExtra("rowsSize", 8); // размер поля для легкого уровня

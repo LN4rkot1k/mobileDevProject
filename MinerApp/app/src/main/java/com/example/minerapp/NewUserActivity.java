@@ -1,5 +1,6 @@
 package com.example.minerapp;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -7,8 +8,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
-import android.content.Intent;
-
 
 public class NewUserActivity extends AppCompatActivity {
 
@@ -43,15 +42,19 @@ public class NewUserActivity extends AppCompatActivity {
                     errorTextView.setText("Логин и пароль должны содержать только английские буквы и цифры");
                     errorTextView.setVisibility(View.VISIBLE);
                 } else {
-                    if (dbHelper.addUser(username, password)) {
-                        Toast.makeText(NewUserActivity.this, "Регистрация успешна", Toast.LENGTH_SHORT).show();
-                        // Переход на экран главного меню
+                    // Хэшируем пароль перед записью в БД
+                    String hashedPassword = HashingPassword.hashPassword(password);
+
+                    if (dbHelper.addUser(username, hashedPassword)) {
+                        // Сохраняем username в Singleton
+                        GameSession.getInstance().setUsername(username);
+
+                        GameSession.getInstance().logCurrentState();
+
+
+                        Toast.makeText(NewUserActivity.this, "Регистрация успешна, " + username + "!", Toast.LENGTH_SHORT).show();
                         startActivity(new Intent(NewUserActivity.this, MainMenuActivity.class));
-
-                        //Intent intent = new Intent(NewUserActivity.this, GameActivity.class);
-                        //intent.putExtra("username", username);
-
-                        finish(); // Закрыть активность
+                        finish();
                     } else {
                         errorTextView.setText("Пользователь уже существует");
                         errorTextView.setVisibility(View.VISIBLE);
@@ -60,12 +63,11 @@ public class NewUserActivity extends AppCompatActivity {
             }
         });
 
-        // Обработчик для кнопки "Вернуться назад"
+        // Обработчик кнопки "Назад"
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(NewUserActivity.this, RegistrationActivity.class);
-                startActivity(intent);
+                startActivity(new Intent(NewUserActivity.this, RegistrationActivity.class));
                 finish();
             }
         });
@@ -75,4 +77,3 @@ public class NewUserActivity extends AppCompatActivity {
         return input.matches("^[a-zA-Z0-9]+$");
     }
 }
-

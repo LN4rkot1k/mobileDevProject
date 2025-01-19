@@ -7,14 +7,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-
 import androidx.appcompat.app.AppCompatActivity;
 
-public class RegistrationActivity extends AppCompatActivity
-{
+public class RegistrationActivity extends AppCompatActivity {
     private EditText usernameEditText, passwordEditText;
-    private Button registerButton;
-    private Button enterButton;
+    private Button registerButton, enterButton;
     private DatabaseHelper dbHelper;
 
     @Override
@@ -22,7 +19,6 @@ public class RegistrationActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_registration);
 
-        // Инициализация элементов
         usernameEditText = findViewById(R.id.usernameEditText);
         passwordEditText = findViewById(R.id.passwordEditText);
         registerButton = findViewById(R.id.registerButton);
@@ -37,26 +33,30 @@ public class RegistrationActivity extends AppCompatActivity
                 String username = usernameEditText.getText().toString().trim();
                 String password = passwordEditText.getText().toString().trim();
 
-                if (dbHelper.checkUser(username, password)) {
-                    Toast.makeText(RegistrationActivity.this, "Добро пожаловать!", Toast.LENGTH_SHORT).show();
-                    // переход на экран главного меню
+                // Хэшируем введенный пароль перед проверкой
+                String hashedPassword = HashingPassword.hashPassword(password);
+
+                if (dbHelper.checkUser(username, hashedPassword)) {
+                    // Сохраняем username в Singleton
+                    GameSession.getInstance().setUsername(username);
+
+                    GameSession.getInstance().logCurrentState();
+
+
+                    Toast.makeText(RegistrationActivity.this, "Добро пожаловать, " + username + "!", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(RegistrationActivity.this, MainMenuActivity.class));
-                    //Intent intent = new Intent(RegistrationActivity.this, GameActivity.class);
-                    //intent.putExtra("username", username);
                     finish();
-                } else{
+                } else {
                     Toast.makeText(RegistrationActivity.this, "Неверный логин или пароль!", Toast.LENGTH_SHORT).show();
                 }
             }
         });
 
-
-        // Обработчик клика по кнопке "Регистрации"
+        // Обработчик клика по кнопке "Регистрация"
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(RegistrationActivity.this, NewUserActivity.class);
-                startActivity(intent);
+                startActivity(new Intent(RegistrationActivity.this, NewUserActivity.class));
                 finish();
             }
         });
